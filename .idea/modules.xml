@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/DoomsdayClock.iml" filepath="$PROJECT_DIR$/.idea/modules/DoomsdayClock.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/DoomsdayClock.android.iml" filepath="$PROJECT_DIR$/.idea/modules/android/DoomsdayClock.android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/DoomsdayClock.android.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/android/DoomsdayClock.android.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/DoomsdayClock.android.main.iml" filepath="$PROJECT_DIR$/.idea/modules/android/DoomsdayClock.android.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/DoomsdayClock.android.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/android/DoomsdayClock.android.unitTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/DoomsdayClock.core.iml" filepath="$PROJECT_DIR$/.idea/modules/core/DoomsdayClock.core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/DoomsdayClock.core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/core/DoomsdayClock.core.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/core/DoomsdayClock.core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/core/DoomsdayClock.core.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/DoomsdayClock.desktop.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/DoomsdayClock.desktop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/DoomsdayClock.desktop.main.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/DoomsdayClock.desktop.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/desktop/DoomsdayClock.desktop.test.iml" filepath="$PROJECT_DIR$/.idea/modules/desktop/DoomsdayClock.desktop.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/html/DoomsdayClock.html.iml" filepath="$PROJECT_DIR$/.idea/modules/html/DoomsdayClock.html.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/html/DoomsdayClock.html.main.iml" filepath="$PROJECT_DIR$/.idea/modules/html/DoomsdayClock.html.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/html/DoomsdayClock.html.test.iml" filepath="$PROJECT_DIR$/.idea/modules/html/DoomsdayClock.html.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ios/DoomsdayClock.ios.iml" filepath="$PROJECT_DIR$/.idea/modules/ios/DoomsdayClock.ios.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ios/DoomsdayClock.ios.main.iml" filepath="$PROJECT_DIR$/.idea/modules/ios/DoomsdayClock.ios.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ios/DoomsdayClock.ios.test.iml" filepath="$PROJECT_DIR$/.idea/modules/ios/DoomsdayClock.ios.test.iml" />
+    </modules>
+  </component>
+</project>

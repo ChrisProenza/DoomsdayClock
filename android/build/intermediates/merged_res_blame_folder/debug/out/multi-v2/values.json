@@ -1,0 +1,36 @@
+{
+    "logs": [
+        {
+            "outputFile": "C:\\Users\\Chris\\AndroidStudioProjects\\DoomsdayClock\\android\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values\\values.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Chris\\AndroidStudioProjects\\DoomsdayClock\\android\\res\\values\\strings.xml",
+                    "from": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "56",
+                        "endColumns": "50",
+                        "endOffsets": "102"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "111",
+                        "endColumns": "50",
+                        "endOffsets": "157"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Chris\\AndroidStudioProjects\\DoomsdayClock\\android\\res\\values\\color.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "55",
+                        "endOffsets": "106"
+                    }
+                }
+            ]
+        }
+    ]
+}
