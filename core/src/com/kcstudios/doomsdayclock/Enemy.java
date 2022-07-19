@@ -3,11 +3,14 @@ package com.kcstudios.doomsdayclock;
 import com.badlogic.gdx.graphics.Texture;
 
 abstract class Enemy {
-    protected int X;
-    protected int Y;
+    protected float X;
+    protected float Y;
+    protected float speed;
     protected int hp;
     protected int damage;
+    protected int xp;
     protected int id;
+    protected int type;
     protected int frame;
     protected Texture[] runSprites;
     protected Texture currentSprite;
@@ -16,12 +19,24 @@ abstract class Enemy {
         return id;
     }
 
-    public int getX() {
+    public float getX() {
         return X;
     }
 
-    public int getY() {
+    public void setX(float X) {
+        this.X = X;
+    }
+
+    public float getY() {
         return Y;
+    }
+
+    public void setY(float X) {
+        this.X = X;
+    }
+
+    public float getSpeed() {
+        return speed;
     }
 
     abstract public int getHp();
@@ -32,7 +47,9 @@ abstract class Enemy {
 
     abstract public Texture getCurrentSprite(boolean nextFrame);
 
-    public abstract void move(int deltaVx, int deltaVy);
+    public abstract void move(float deltaVx, float deltaVy);
+
+    public abstract int getXP();
 }
 
 

@@ -2,15 +2,19 @@ package com.kcstudios.doomsdayclock;
 
 import com.badlogic.gdx.graphics.Texture;
 
-import org.w3c.dom.Text;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 public class Player {
-    private int X;
-    private int Y;
+    private float X;
+    private float Y;
     private int hp;
     private int lvl;
-    private int equippedItem;
-    private boolean[] ownedItems;
+    private int xp;
+    private int swordDamage;
+    private double speed;
+    private final Map<Integer, Skill> projectiles;
     private Texture[] runSprites;
     private Texture[] attackSprites;
     private Texture[] rollSprites;
@@ -21,6 +25,11 @@ public class Player {
 
 
     Player() {
+        speed = 1.5;
+        swordDamage = 5;
+        lvl = 1;
+        xp = 0;
+        projectiles = new HashMap<>();
         runSprites = new Texture[8];
         runSprites[0] = new Texture("KnightRun/tile000.png");
         runSprites[1] = new Texture("KnightRun/tile001.png");
@@ -30,19 +39,14 @@ public class Player {
         runSprites[5] = new Texture("KnightRun/tile005.png");
         runSprites[6] = new Texture("KnightRun/tile006.png");
         runSprites[7] = new Texture("KnightRun/tile007.png");
-        attackSprites = new Texture[12];
+        attackSprites = new Texture[7];
         attackSprites[0] = new Texture("Knight3Hit/tile001.png");
-        attackSprites[1] = new Texture("Knight3Hit/tile002.png");
-        attackSprites[2] = new Texture("Knight3Hit/tile003.png");
-        attackSprites[3] = new Texture("Knight3Hit/tile004.png");
-        attackSprites[4] = new Texture("Knight3Hit/tile005.png");
-        attackSprites[5] = new Texture("Knight3Hit/tile006.png");
-        attackSprites[6] = new Texture("Knight3Hit/tile007.png");
-        attackSprites[7] = new Texture("Knight3Hit/tile008.png");
-        attackSprites[8] = new Texture("Knight3Hit/tile009.png");
-        attackSprites[9] = new Texture("Knight3Hit/tile010.png");
-        attackSprites[10] = new Texture("Knight3Hit/tile011.png");
-        attackSprites[11] = new Texture("Knight3Hit/tile012.png");
+        attackSprites[1] = new Texture("Knight3Hit/tile007.png");
+        attackSprites[2] = new Texture("Knight3Hit/tile008.png");
+        attackSprites[3] = new Texture("Knight3Hit/tile009.png");
+        attackSprites[4] = new Texture("Knight3Hit/tile010.png");
+        attackSprites[5] = new Texture("Knight3Hit/tile011.png");
+        attackSprites[6] = new Texture("Knight3Hit/tile012.png");
         new Texture("Knight3Hit/tile021.png");
         rollSprites = new Texture[15];
         rollSprites[0] = new Texture("KnightRoll/tile000.png");
@@ -84,7 +88,7 @@ public class Player {
         currentSprite = attackSprites[0];
     }
 
-    public int getX() {
+    public float getX() {
         return X;
     }
 
@@ -92,7 +96,7 @@ public class Player {
         X = x;
     }
 
-    public int getY() {
+    public float getY() {
         return Y;
     }
 
@@ -116,19 +120,6 @@ public class Player {
         this.lvl = lvl;
     }
 
-    public int getEquippedItem() {
-        return equippedItem;
-    }
-
-    public void setEquippedItem(int equippedItem) {
-        this.equippedItem = equippedItem;
-    }
-
-    public boolean checkOwned(int i) {
-        if (ownedItems[i])
-            return true;
-        return false;
-    }
     public int getState() {
         return state;
     }
@@ -137,7 +128,7 @@ public class Player {
         this.state = state;
     }
 
-    public void move (int dVx, int dVy) {
+    public void move (float dVx, float dVy) {
         X = X + dVx;
         Y = Y + dVy;
     }
@@ -168,5 +159,40 @@ public class Player {
             }
         }
         return currentSprite;
+    }
+
+    public int getFrame() {
+        return frame;
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    public int getSwordDamage() {
+        Random random = new Random();
+        return random.nextInt(swordDamage + 1);
+    }
+
+    public void addXP(int xp) {
+        if (xp > (lvl * 20)) {
+            lvl++;
+        }
+    }
+
+    public int getXP() {
+        return xp;
+    }
+
+    public void setXP(int xp) {
+        this.xp = xp;
+    }
+
+    public Map<Integer, Skill> getProjectiles() {
+        return projectiles;
+    }
+
+    public void addProjectile(Skill skill) {
+        projectiles.put(skill.id, skill);
     }
 }

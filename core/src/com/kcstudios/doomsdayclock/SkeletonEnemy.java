@@ -4,11 +4,17 @@ import com.badlogic.gdx.graphics.Texture;
 
 public class SkeletonEnemy extends Enemy {
 
-    SkeletonEnemy(int id, int x, int y) {
-        this.hp = 1;
+    SkeletonEnemy(int id, float x, float y) {
+        this.hp = 21;
         this.id = id;
         this.X = x;
         this.Y = y;
+        this.xp = 1;
+        this.type = 1;
+        this.damage = 5;
+        this.speed = .5F;
+        this.frame = 0;
+        this.currentSprite = new Texture("SkeletonWalk/tile000.png");
         this.runSprites = new Texture[13];
         this.runSprites[0] = new Texture("SkeletonWalk/tile000.png");
         this.runSprites[1] = new Texture("SkeletonWalk/tile001.png");
@@ -37,7 +43,7 @@ public class SkeletonEnemy extends Enemy {
 
     @Override
     public int getDamage() {
-        return 0;
+        return damage;
     }
 
     public Texture getCurrentSprite(boolean nextFrame) {
@@ -50,9 +56,16 @@ public class SkeletonEnemy extends Enemy {
         return currentSprite;
     }
 
-    public void move(int deltaVx, int deltaVy) {
+    public void move(float deltaVx, float deltaVy) {
         this.X += deltaVx;
         this.Y += deltaVy;
     }
 
+    public int getType() {
+        return type;
+    }
+
+    public int getXP() {
+        return xp;
+    }
 }
