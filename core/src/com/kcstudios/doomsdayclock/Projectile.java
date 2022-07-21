@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 public class Projectile {
     protected int id;
     protected int damage;
-    protected int speed;
+    protected double speed;
     protected float X;
     protected float Y;
     protected float xOffset = 0;
@@ -16,9 +16,11 @@ public class Projectile {
     protected boolean passThrough;
     protected double rotation;
     protected float rotationSpeed;
-    protected float activationTime;
+    protected double activationTime;
+    protected double lastDamageTick;
+    protected int knockback;
 
-    Projectile(Skill skill, float x, float y, int i, double angle) {
+    Projectile(Skill skill, float x, float y, int i, double angle, double activation) {
         damage = skill.getDamage();
         speed = skill.getSpeed();
         X = x;
@@ -27,14 +29,29 @@ public class Projectile {
         size = skill.getSize();
         texture = skill.getTexture();
         passThrough = skill.isPassThrough();
-        rotation = -angle;
-        if(skill.id != 1) {
+        if(skill.getId() == 2 || skill.getId() ==  3) {
+            rotation = Math.toRadians(360/skill.getNumberProjectiles() * (i));
+        } else
+            rotation = -angle;
+        if(skill.id == 0) {
+            xOffset = (float) (2 * Math.sin(Math.toRadians(90) * i) * Math.cos(rotation));
+            X = (float) (x + (4 * i * Math.cos(rotation)));
+            yOffset = (float) (2 * Math.cos(Math.toRadians(90) * i) * Math.sin(rotation));
+            Y = (float) (y - (4 * i * Math.sin(rotation)));
+        } else if (skill.id == 1){
+            xOffset = (float) (10 * Math.cos(
+                    Math.toRadians(360/(skill.getNumberProjectiles())) * (i)));
+            yOffset = (float) (10 * Math.sin(
+                    Math.toRadians(360/(skill.getNumberProjectiles())) * (i)));
+        } else {
             xOffset = (float) (2 * i * Math.cos(rotation));
             yOffset = (float) (2 * i * Math.sin(rotation));
         }
         rotationSpeed = skill.getDeltaRotation();
-        activationTime = 0;
         this.id = skill.id;
+        lastDamageTick = -1;
+        activationTime = activation;
+        knockback = skill.getKnockback();
     }
 
     public double getDuration() {
@@ -77,11 +94,11 @@ public class Projectile {
         Y = y;
     }
 
-    public int getSpeed() {
+    public double getSpeed() {
         return speed;
     }
 
-    public void setSpeed(int speed) {
+    public void setSpeed(double speed) {
         this.speed = speed;
     }
 
@@ -111,11 +128,19 @@ public class Projectile {
         return activationTime;
     }
 
-    public void setActivationTime(float activationTime) {
-        this.activationTime = activationTime;
-    }
-
     public int getID() {
         return id;
+    }
+
+    public void setLastDamageTick(double lastDamageTick) {
+        this.lastDamageTick = lastDamageTick;
+    }
+
+    public double getLastDamageTick() {
+        return lastDamageTick;
+    }
+
+    public int getKnockback() {
+        return knockback;
     }
 }

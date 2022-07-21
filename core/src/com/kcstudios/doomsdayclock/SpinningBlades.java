@@ -4,17 +4,19 @@ import com.badlogic.gdx.graphics.Texture;
 
 public class SpinningBlades extends Skill {
     SpinningBlades() {
+        lvl = 1;
         speed = 0;
-        damage = 5;
+        damage = 1;
         duration = 5;
         numberProjectiles = 1;
-        size = 10;
+        size = 15;
         cooldown = 10;
         lastTick = -cooldown - .1;
         texture = new Texture("animations/SpectralSword.png");
         passThrough = true;
         id = 2;
-        deltaRotation = (float) Math.toRadians(30);
+        deltaRotation = (float) Math.toRadians(15);
+        knockback = 5;
     }
 
     @Override
@@ -22,19 +24,28 @@ public class SpinningBlades extends Skill {
         if(lvl == 1) {
             lvl++;
             numberProjectiles++;
-            speed+=3;
+            damage++;
         } else if (lvl == 2) {
             lvl++;
-            damage+=5;
-            cooldown*=.75;
+            numberProjectiles++;
+            damage++;
+            cooldown--;
         } else if (lvl == 3) {
             lvl++;
             numberProjectiles++;
-            size+=3;
+            damage++;
         } else if (lvl == 4) {
             lvl++;
-            damage+=10;
-            cooldown*=.5;
+            numberProjectiles++;
+            damage++;
+            cooldown--;
+        } else if (lvl == 5) {
+            lvl++;
+            numberProjectiles++;
+            damage++;
+        } else {
+            lvl++;
+            size++;
         }
     }
 }

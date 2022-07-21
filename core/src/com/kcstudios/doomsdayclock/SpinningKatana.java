@@ -4,37 +4,45 @@ import com.badlogic.gdx.graphics.Texture;
 
 public class SpinningKatana extends Skill {
     SpinningKatana() {
+        lvl = 1;
         speed = 0;
-        damage = 5;
-        duration = 5;
-        numberProjectiles = 1;
-        size = 10;
-        cooldown = 10;
+        damage = 2;
+        duration = 8;
+        numberProjectiles = 4;
+        size = 5;
+        cooldown = 20;
         lastTick = -cooldown - .1;
         texture = new Texture("animations/SpinningKatana.png");
         passThrough = true;
         id = 1;
         deltaRotation = (float) Math.toRadians(45);
+        knockback = 0;
     }
 
     @Override
     void lvlUp() {
         if(lvl == 1) {
             lvl++;
-            numberProjectiles++;
-            speed+=3;
+            duration+=2;
+            size++;
         } else if (lvl == 2) {
             lvl++;
-            damage+=5;
-            cooldown*=.75;
+            cooldown-=2;
+            size++;
         } else if (lvl == 3) {
             lvl++;
-            numberProjectiles++;
-            size+=3;
+            damage+=8;
+            size++;
         } else if (lvl == 4) {
             lvl++;
-            damage+=10;
-            cooldown*=.5;
+            cooldown-=1;
+            size++;
+        } else if (lvl == 5) {
+            lvl++;
+            numberProjectiles*=2;
+            size++;
+        } else {
+            lvl++;
         }
     }
 }

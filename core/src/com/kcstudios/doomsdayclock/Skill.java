@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 
 abstract class Skill {
     protected int damage;
-    protected int speed;
+    protected double speed;
     protected float deltaRotation;
     protected int lvl;
     protected double duration;
@@ -16,6 +16,7 @@ abstract class Skill {
     protected boolean passThrough;
     protected int id;
     protected double rotation;
+    protected int knockback;
 
     public double getDuration() {
         return duration;
@@ -52,7 +53,7 @@ abstract class Skill {
         this.lastTick = lastTick;
     }
 
-    public int getSpeed() {
+    public double getSpeed() {
         return speed;
     }
 
@@ -99,5 +100,9 @@ abstract class Skill {
 
     public void setDeltaRotation(float deltaRotation) {
         this.deltaRotation = deltaRotation;
+    }
+
+    public int getKnockback() {
+        return knockback;
     }
 }

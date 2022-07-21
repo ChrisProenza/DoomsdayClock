@@ -12,6 +12,7 @@ abstract class Enemy {
     protected int id;
     protected int type;
     protected int frame;
+    protected int size;
     protected Texture[] runSprites;
     protected Texture currentSprite;
 
@@ -50,6 +51,10 @@ abstract class Enemy {
     public abstract void move(float deltaVx, float deltaVy);
 
     public abstract int getXP();
+
+    public int getSize() {
+        return size;
+    }
 }
 
 

@@ -10,10 +10,13 @@ public class Player {
     private float X;
     private float Y;
     private int hp;
+    private int maxHP;
     private int lvl;
     private int xp;
+    private int healing;
     private int swordDamage;
     private double speed;
+    private double cooldownReduction;
     private final Map<Integer, Skill> projectiles;
     private Texture[] runSprites;
     private Texture[] attackSprites;
@@ -29,6 +32,7 @@ public class Player {
         swordDamage = 5;
         lvl = 1;
         xp = 0;
+        cooldownReduction = 0;
         projectiles = new HashMap<>();
         runSprites = new Texture[8];
         runSprites[0] = new Texture("KnightRun/tile000.png");
@@ -85,6 +89,7 @@ public class Player {
         X = 0;
         Y = 0;
         hp = 100;
+        maxHP = 100;
         currentSprite = attackSprites[0];
     }
 
@@ -110,6 +115,20 @@ public class Player {
 
     public void setHp(int hp) {
         this.hp = hp;
+    }
+
+    public void heal() {
+        if (this.hp < maxHP)
+            this.hp += healing;
+    }
+
+    public int getHealing() {
+        return healing;
+    }
+
+    public void setHealing(int healing) {
+        maxHP += 50;
+        this.healing = healing;
     }
 
     public int getLvl() {
@@ -166,7 +185,14 @@ public class Player {
     }
 
     public double getSpeed() {
+        if (speed > 5) {
+            speed = 5;
+        }
         return speed;
+    }
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
     }
 
     public int getSwordDamage() {
@@ -174,10 +200,13 @@ public class Player {
         return random.nextInt(swordDamage + 1);
     }
 
-    public void addXP(int xp) {
-        if (xp > (lvl * 20)) {
+    public boolean addXP(int addedXP) {
+        this.xp += addedXP;
+        if (this.xp > (lvl * lvl * 5)) {
             lvl++;
+            return true;
         }
+        return false;
     }
 
     public int getXP() {
@@ -194,5 +223,18 @@ public class Player {
 
     public void addProjectile(Skill skill) {
         projectiles.put(skill.id, skill);
+    }
+
+    public void setSwordDamage(int swordDamage) {
+        this.swordDamage = swordDamage;
+    }
+
+
+    public double getCooldownReduction() {
+        return cooldownReduction;
+    }
+
+    public void setCooldownReduction(double cooldownReduction) {
+        this.cooldownReduction = cooldownReduction;
     }
 }
