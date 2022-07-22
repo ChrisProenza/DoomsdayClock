@@ -39,6 +39,8 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	int triggerSkeletons = 0;
 	int triggerTwo = 0;
 	int triggerThree = 0;
+	int triggerFour = 0;
+	int triggerFive = 0;
 	int triggerBoss = 0;
 
 	// Player info
@@ -74,6 +76,9 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	private Texture confirmButton;
 	private Texture selectionBox;
 	private Map<Integer, Texture> skillTextures;
+	private Map<Integer, Sound> enemySounds;
+	private Map<Integer, Sound> enemyDeathSounds;
+	private Map<Integer, Double> enemySoundDelay;
 	private List<Integer> skillList;
 	private Touchpad touchpad;
 	private int backgroundX = 0;
@@ -86,8 +91,12 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		public float touchY = 0;
 		public boolean touched = false;
 	}
+	// Sounds
 	private Music stage001;
-	private Sound swing;
+	private Sound playerAttackSound;
+	private Sound playerDeathSound;
+	private Sound levelUpSound;
+	private Sound deathSpawn;
 	private Sound hit;
 	private Sound axe;
 	private Sound dagger;
@@ -127,8 +136,33 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 			touches.put(i, new touchInfo());
 		}
 		player = new Player();
+		// Sounds
 		stage001 = Gdx.audio.newMusic(Gdx.files.internal("sounds/stage001.mp3"));
+		stage001.setVolume(.5F);
 		stage001.play();
+		playerAttackSound = Gdx.audio.newSound(Gdx.files.internal("sounds/PlayerAttack.mp3"));
+		playerDeathSound = Gdx.audio.newSound(Gdx.files.internal("sounds/PlayerDeath.mp3"));
+		deathSpawn = Gdx.audio.newSound(Gdx.files.internal("sounds/DeathSpawn.mp3"));
+		levelUpSound = Gdx.audio.newSound(Gdx.files.internal("sounds/LevelUp!.mp3"));
+		enemySoundDelay = new HashMap<>();
+		enemySoundDelay.put(1, (double) 0);
+		enemySoundDelay.put(2, (double) 0);
+		enemySoundDelay.put(12, (double) 0);
+		enemySoundDelay.put(42, (double) 0);
+		enemySoundDelay.put(69, (double) 0);
+		enemySoundDelay.put(111, (double) 0);
+		enemySounds = new HashMap<>();
+		enemySounds.put(1, Gdx.audio.newSound(Gdx.files.internal("sounds/SkeletonSound.mp3")));
+		enemySounds.put(2, Gdx.audio.newSound(Gdx.files.internal("sounds/EyeAttack.mp3")));
+		enemySounds.put(12, Gdx.audio.newSound(Gdx.files.internal("sounds/HuntressAttack.mp3")));
+		enemySounds.put(42, Gdx.audio.newSound(Gdx.files.internal("sounds/GoblinSound.mp3")));
+		enemySounds.put(69, Gdx.audio.newSound(Gdx.files.internal("sounds/SkeletonWarriorAttack.mp3")));
+		enemyDeathSounds = new HashMap<>();
+		enemyDeathSounds.put(2, Gdx.audio.newSound(Gdx.files.internal("sounds/EyeDeath.mp3")));
+		enemyDeathSounds.put(12, Gdx.audio.newSound(Gdx.files.internal("sounds/HuntressDeath.mp3")));
+		enemyDeathSounds.put(42, Gdx.audio.newSound(Gdx.files.internal("sounds/GoblinDeath.mp3")));
+		enemyDeathSounds.put(69, Gdx.audio.newSound(Gdx.files.internal("sounds/SkeletonWarriorDeath.mp3")));
+
 	}
 
 	private void generateMap() {
@@ -236,6 +270,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 
 	private void moveEnemy() {
 		for (Enemy enemy: enemies) {
+
 			float eDeltaVx = 0;
 			float eDeltaVy = 0;
 			double deltaY = player.getY() - enemy.getY();
@@ -257,10 +292,12 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 			for (int i = 0; i < (10 * Math.sqrt(triggerSkeletons)); i++) {
 				float X = 0;
 				float Y = 0;
-				if (random.nextBoolean())
+				if (random.nextBoolean()) {
 					X = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getX());
-				else
+				}
+				else {
 					Y = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getY());
+				}
 				if (X == 0) {
 					X = ((random.nextInt(2) - 1) * 200) - 100;
 					X = X + player.getX();
@@ -277,10 +314,12 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 			for (int i = 0; i < (5 * Math.sqrt(triggerTwo)); i++) {
 				float X = 0;
 				float Y = 0;
-				if (random.nextBoolean())
+				if (random.nextBoolean()) {
 					X = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getX());
-				else
+				}
+				else {
 					Y = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getY());
+				}
 				if (X == 0) {
 					X = ((random.nextInt(2) - 1) * 200) - 100;
 					X = X + player.getX();
@@ -297,10 +336,12 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 			for (int i = 0; i < (2 * Math.sqrt(triggerThree)); i++) {
 				float X = 0;
 				float Y = 0;
-				if (random.nextBoolean())
+				if (random.nextBoolean()) {
 					X = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getX());
-				else
+				}
+				else {
 					Y = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getY());
+				}
 				if (X == 0) {
 					X = ((random.nextInt(2) - 1) * 200) - 100;
 					X = X + player.getX();
@@ -311,14 +352,60 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 				enemies.add(new SkeletonWarrior(2, X, Y, triggerThree));
 			}
 		}
+		// Spawn increasing number of enemyFour every 20 seconds
+		if (elapsedTime > ((triggerFour+1) * 30) && enemies.size() < 300) {
+			triggerFour++;
+			for (int i = 0; i < (2 * Math.sqrt(triggerFour)); i++) {
+				float X = 0;
+				float Y = 0;
+				if (random.nextBoolean()) {
+					X = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getX());
+				}
+				else {
+					Y = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getY());
+				}
+				if (X == 0) {
+					X = ((random.nextInt(2) - 1) * 200) - 100;
+					X = X + player.getX();
+				} else {
+					Y = ((random.nextInt(2) - 1) * 200) - 100;
+					Y = Y + player.getY();
+				}
+				enemies.add(new GoblinEnemy(2, X, Y, triggerFour));
+			}
+		}
+		// Spawn increasing number of enemyFive every 60 seconds
+		if (elapsedTime > ((triggerFive+1) * 25) && enemies.size() < 300) {
+			triggerFive++;
+			for (int i = 0; i < (2 * Math.sqrt(triggerFive)); i++) {
+				float X = 0;
+				float Y = 0;
+				if (random.nextBoolean()) {
+					X = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getX());
+				}
+				else {
+					Y = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getY());
+				}
+				if (X == 0) {
+					X = ((random.nextInt(2) - 1) * 200) - 100;
+					X = X + player.getX();
+				} else {
+					Y = ((random.nextInt(2) - 1) * 200) - 100;
+					Y = Y + player.getY();
+				}
+				enemies.add(new Huntress(2, X, Y, triggerFive));
+			}
+		}
 		// Spawn Boss every 60 seconds
 		if (elapsedTime > ((triggerBoss+1) * 60) && enemies.size() < 200) {
+			deathSpawn.play();
 			triggerBoss++;
 			for (int i = 0; i < triggerBoss; i++) {
 				float X = 0;
 				float Y = 0;
-				if (random.nextBoolean())
+				if (random.nextBoolean()) {
 					X = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getX());
+				}
 				else
 					Y = (getSpawn() * (random.nextBoolean() ? -1 : 1) + player.getY());
 				if (X == 0) {
@@ -404,7 +491,8 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 			playerDeltaTime = 0;
 			nextFrame = true;
 		}
-		if (player.getHp() <= 0) {
+		if (player.getHp() <= 0 && player.getState() != 3) {
+			playerDeathSound.play();
 			player.setState(3);
 		}
 		Texture currentSprite = player.getCurrentSprite(nextFrame);
@@ -434,20 +522,23 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 		if (enemies.size() > 0) {
 			for (Enemy enemy : enemies) {
-				if (enemy != null){
-					Texture currentSprite = enemy.getCurrentSprite(nextFrame);
-					int h = currentSprite.getHeight() * enemy.getSize();
-					int w = currentSprite.getWidth() * enemy.getSize();
-					if (player.getX() > enemy.getX())
-						batch.draw(currentSprite, ((100 - w / 8) - (player.getX() - enemy.getX())),
-								((100 - h / 8) + (player.getY() - enemy.getY())),
-								(w / 4), (h / 4));
-					else
-						batch.draw(currentSprite, ((100 - w / 8) - (player.getX() - enemy.getX())),
-								((100 - h / 8) + (player.getY() - enemy.getY())),
-								(w / 4), (h / 4), 0, 0, 22, 33,
-								true, false);
+				if(enemySounds.containsKey(enemy.type)
+						&& elapsedTime - enemySoundDelay.get(enemy.type) > 3) {
+					enemySoundDelay.put(enemy.type, elapsedTime);
+					enemySounds.get(enemy.type).play();
 				}
+				Texture currentSprite = enemy.getCurrentSprite(nextFrame);
+				int h = currentSprite.getHeight() * enemy.getSize();
+				int w = currentSprite.getWidth() * enemy.getSize();
+				if (player.getX() > enemy.getX())
+					batch.draw(currentSprite, ((100 - w / 8) - (player.getX() - enemy.getX())),
+							((100 - h / 8) + (player.getY() - enemy.getY())),
+							(w / 4), (h / 4));
+				else
+					batch.draw(currentSprite, ((100 - w / 8) - (player.getX() - enemy.getX())),
+							((100 - h / 8) + (player.getY() - enemy.getY())),
+							(w / 4), (h / 4), 0, 0, (w/enemy.getSize()), (h/enemy.getSize()),
+							true, false);
 			}
 		}
 	}
@@ -532,6 +623,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 				if (player.getState() != 3) {
 					if (player.getState() == 0) {
 						player.setState(2);
+						playerAttackSound.play();
 						playerAttackDeltaTime = 0;
 					}
 					if (player.getState() == 1) {
@@ -663,7 +755,11 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 						enemy.setX((float) (enemy.getX() + Math.cos(angle) * projectile.getKnockback()));
 						enemy.setY((float) (enemy.getX() + Math.sin(angle) * projectile.getKnockback()));
 						if (enemy.getHp() <= 0) {
+							if(enemyDeathSounds.containsKey(enemy.type)) {
+								enemyDeathSounds.get(enemy.type).play();
+							}
 							if (player.addXP(enemy.getXP())){
+								levelUpSound.play();
 								lvlUp = true;
 								randomizeAbilities();
 							}
@@ -731,7 +827,11 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 						enemy.setHp(enemy.getHp() - player.getSwordDamage());
 						enemy.setX(enemy.getX() + 10);
 						if(enemy.getHp() <= 0) {
+							if(enemyDeathSounds.containsKey(enemy.type)) {
+								enemyDeathSounds.get(enemy.type).play();
+							}
 							if (player.addXP(enemy.getXP())){
+								levelUpSound.play();
 								lvlUp = true;
 								randomizeAbilities();
 							}
@@ -764,8 +864,12 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 								((100 - h*.25F) + (player.getY() - enemy.getY()))
 						);
 						if(enemy.getHp() <= 0) {
+							if(enemyDeathSounds.containsKey(enemy.type)) {
+								enemyDeathSounds.get(enemy.type).play();
+							}
 							itr.remove();
 							if (player.addXP(enemy.getXP())){
+								levelUpSound.play();
 								lvlUp = true;
 								randomizeAbilities();
 							}
@@ -832,11 +936,20 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 
 	public void restart() {
 		environment.clear();
+		projectiles.clear();
 		generateMap();
 		player = new Player();
 		enemies.clear();
 		elapsedTime = 0;
 		lastHit = -.5;
 		triggerSkeletons = 0;
+		triggerTwo = 0;
+		triggerThree = 0;
+		triggerFour = 0;
+		triggerFive = 0;
+		triggerBoss = 0;
+		for(Integer key:enemySoundDelay.keySet()) {
+			enemySoundDelay.put(key, (double) 0);
+		}
 	}
 }

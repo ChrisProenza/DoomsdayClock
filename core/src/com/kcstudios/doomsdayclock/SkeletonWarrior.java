@@ -11,7 +11,7 @@ public class SkeletonWarrior extends Enemy {
         this.Y = y;
         this.xp = 60 * wave;
         this.type = 69;
-        this.damage = 20 * wave;
+        this.damage = 10 * wave;
         this.speed = 1F * wave;
         this.frame = 0;
         this.runSprites = EnemyTextureLoader.getInstance().skeletonWarriorRunSprites;

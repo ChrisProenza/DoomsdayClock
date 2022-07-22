@@ -7,6 +7,8 @@ public class EnemyTextureLoader {
     Texture[] skeletonRunSprites;
     Texture[] evileyeRunSprites;
     Texture[] deathRunSprites;
+    Texture[] goblinRunSprites;
+    Texture[] huntressRunSprites;
 
     private static EnemyTextureLoader enemyTextureLoader = null;
     public static EnemyTextureLoader getInstance() {
@@ -65,5 +67,25 @@ public class EnemyTextureLoader {
         this.skeletonWarriorRunSprites[3] = new Texture("SkeletonWarrior/walk_4.png");
         this.skeletonWarriorRunSprites[4] = new Texture("SkeletonWarrior/walk_5.png");
         this.skeletonWarriorRunSprites[5] = new Texture("SkeletonWarrior/walk_6.png");
+        // Goblin Textures
+        this.goblinRunSprites = new Texture[8];
+        this.goblinRunSprites[0] = new Texture("Goblin/tile000.png");
+        this.goblinRunSprites[1] = new Texture("Goblin/tile001.png");
+        this.goblinRunSprites[2] = new Texture("Goblin/tile002.png");
+        this.goblinRunSprites[3] = new Texture("Goblin/tile003.png");
+        this.goblinRunSprites[4] = new Texture("Goblin/tile004.png");
+        this.goblinRunSprites[5] = new Texture("Goblin/tile005.png");
+        this.goblinRunSprites[6] = new Texture("Goblin/tile006.png");
+        this.goblinRunSprites[7] = new Texture("Goblin/tile007.png");
+        // Goblin Textures
+        this.huntressRunSprites = new Texture[8];
+        this.huntressRunSprites[0] = new Texture("LaHuntress/tile000.png");
+        this.huntressRunSprites[1] = new Texture("LaHuntress/tile001.png");
+        this.huntressRunSprites[2] = new Texture("LaHuntress/tile002.png");
+        this.huntressRunSprites[3] = new Texture("LaHuntress/tile003.png");
+        this.huntressRunSprites[4] = new Texture("LaHuntress/tile004.png");
+        this.huntressRunSprites[5] = new Texture("LaHuntress/tile005.png");
+        this.huntressRunSprites[6] = new Texture("LaHuntress/tile006.png");
+        this.huntressRunSprites[7] = new Texture("LaHuntress/tile007.png");
     }
 }
