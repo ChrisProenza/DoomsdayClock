@@ -8,6 +8,7 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -106,6 +107,8 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 
 	@Override
 	public void create () {
+		Gdx.graphics.setVSync(false);
+		Gdx.graphics.getFramesPerSecond();
 		batch = new SpriteBatch();
 		camera = new OrthographicCamera();
 		viewport = new FillViewport(200, 200, camera);
@@ -183,6 +186,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 
 	@Override
 	public void render () {
+		ScreenUtils.clear(0, 0, 0, 1);
 		// TODO - inMenu needs to be reversed once a menu is added
 		if (inMenu) {
 			batch.begin();
@@ -214,6 +218,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 				batch.end();
 				frameRenderDelta = 0;
 			} else {
+				batch.begin();
 				frameRenderDelta += Gdx.graphics.getDeltaTime();
 				playerDeltaTime += Gdx.graphics.getDeltaTime();
 				enemyDeltaTime += Gdx.graphics.getDeltaTime();
@@ -223,30 +228,34 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 					player.heal();
 					healTick = elapsedTime;
 				}
-				if (player.getState() == 2)
+				if (player.getState() == 2) {
 					playerAttackDeltaTime += Gdx.graphics.getDeltaTime();
-				else
+				}
+				else {
 					playerAttackDeltaTime = 0;
+				}
 				if (frameRenderDelta > .033) {
-					if (player.getState() == 1)
+					if (player.getState() == 1) {
 						player.move(deltaVx, deltaVy);
-					moveEnemy();
-					ScreenUtils.clear(0, 0, 0, 1);
-					batch.begin();
-					if (player.getState() != 3) {
-						drawBackground();
-						drawEnemies();
-						if ((elapsedTime - lastHit) > .5)
-							detectEnemyCollision();
 					}
-					drawPlayer();
-					drawForeground();
+					moveEnemy();
+					if (player.getState() != 3 && (elapsedTime - lastHit) > .5) {
+						detectEnemyCollision();
+					}
 					playerProjectiles();
 					projectileCollision();
-					drawUI();
-					batch.end();
 					frameRenderDelta = 0;
 				}
+				if (player.getState() != 3) {
+					drawBackground();
+					drawEnemies();
+				}
+				drawPlayer();
+				drawProjectiles();
+				if (player.getState() != 3)
+					drawForeground();
+				drawUI();
+				batch.end();
 			}
 		}
 	}
@@ -715,11 +724,8 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
-	private void projectileCollision() {
-		Iterator<Projectile> itr = projectiles.iterator();
-		while (itr.hasNext()) {
-			boolean collision = false;
-			Projectile projectile = itr.next();
+	private void drawProjectiles() {
+		for (Projectile projectile:projectiles) {
 			TextureRegion projectileTexture = new TextureRegion(projectile.getTexture());
 			if (projectile.getID() == 2) {
 				batch.draw(projectileTexture,
@@ -730,7 +736,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 						projectile.getSize()*2, projectile.getSize()*2,
 						1,
 						1,
-						(float) Math.toDegrees(projectile.getRotation())
+						(float) Math.toDegrees(projectile.getCurrentRotation())
 				);
 			} else {
 				batch.draw(projectileTexture,
@@ -741,9 +747,17 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 						projectile.getSize()*2, projectile.getSize()*2,
 						1,
 						1,
-						(float) Math.toDegrees(projectile.getRotation())
+						(float) Math.toDegrees(projectile.getCurrentRotation())
 				);
 			}
+		}
+	}
+
+	private void projectileCollision() {
+		Iterator<Projectile> itr = projectiles.iterator();
+		while (itr.hasNext()) {
+			boolean collision = false;
+			Projectile projectile = itr.next();
 			if (!projectile.isPassThrough() || elapsedTime - projectile.getLastDamageTick() > 1) {
 				Iterator<Enemy> itr2 = enemies.iterator();
 				while (itr2.hasNext()) {
@@ -774,6 +788,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 				}
 			}
 			if (projectile.getID() == 2) {
+				projectile.getRotation();
 				projectile.setX((float) (player.getX()));
 				projectile.setY((float) (player.getY()));
 			} else if (projectile.getID() == 3) {
@@ -782,7 +797,9 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 						Math.cos(projectile.getRotation()) * projectile.getSpeed()));
 				projectile.setY((float) (projectile.getYOnly() -
 						Math.sin(projectile.getRotation()) * projectile.getSpeed()));
-			} else if (projectile.getID() != 1) {
+			} else if (projectile.getID() == 1) {
+				projectile.getRotation();
+			} else {
 				projectile.setX((float) (projectile.getXOnly() +
 						Math.cos(projectile.getRotation()) * projectile.getSpeed()));
 				projectile.setY((float) (projectile.getYOnly() -
@@ -854,15 +871,6 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 						int damageDealt = player.getSwordDamage();
 						enemy.setHp(enemy.getHp() - damageDealt);
 						enemy.setX(enemy.getX() - 10);
-						BitmapFont bitmapFont = new BitmapFont();
-						bitmapFont.setColor(Color.RED);
-						bitmapFont.getData().setScale(.25F);
-						int h = enemy.getCurrentSprite(false).getHeight();
-						int w = enemy.getCurrentSprite(false).getWidth();
-						bitmapFont.draw(batch, ""+damageDealt,
-								((100 - w*.25F) - (player.getX() - enemy.getX())),
-								((100 - h*.25F) + (player.getY() - enemy.getY()))
-						);
 						if(enemy.getHp() <= 0) {
 							if(enemyDeathSounds.containsKey(enemy.type)) {
 								enemyDeathSounds.get(enemy.type).play();

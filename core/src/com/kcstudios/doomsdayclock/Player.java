@@ -197,7 +197,7 @@ public class Player {
 
     public int getSwordDamage() {
         Random random = new Random();
-        return random.nextInt(swordDamage + 1);
+        return random.nextInt(swordDamage) + swordDamage/2;
     }
 
     public boolean addXP(int addedXP) {

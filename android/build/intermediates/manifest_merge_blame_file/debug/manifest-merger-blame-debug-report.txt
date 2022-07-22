@@ -30,32 +30,31 @@
 20-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:11:9-45
 21        android:isGame="true"
 21-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:12:9-30
-22        android:label="@string/app_name"
+22        android:label="@string/app_name" >
 22-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:14:9-41
-23        android:testOnly="true" >
-24        <activity
-24-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:16:9-26:20
-25            android:name="com.kcstudios.doomsdayclock.AndroidLauncher"
-25-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:17:13-71
-26            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout"
-26-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:20:13-107
-27            android:exported="true"
-27-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:21:13-36
-28            android:label="@string/app_name"
-28-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:18:13-45
-29            android:screenOrientation="landscape" >
-29-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:19:13-50
-30            <intent-filter>
-30-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:22:13-25:29
-31                <action android:name="android.intent.action.MAIN" />
-31-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:23:17-69
-31-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:23:25-66
-32
-33                <category android:name="android.intent.category.LAUNCHER" />
-33-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:24:17-77
-33-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:24:27-74
-34            </intent-filter>
-35        </activity>
-36    </application>
-37
-38</manifest>
+23        <activity
+23-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:16:9-26:20
+24            android:name="com.kcstudios.doomsdayclock.AndroidLauncher"
+24-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:17:13-71
+25            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout"
+25-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:20:13-107
+26            android:exported="true"
+26-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:21:13-36
+27            android:label="@string/app_name"
+27-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:18:13-45
+28            android:screenOrientation="landscape" >
+28-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:19:13-50
+29            <intent-filter>
+29-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:22:13-25:29
+30                <action android:name="android.intent.action.MAIN" />
+30-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:23:17-69
+30-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:23:25-66
+31
+32                <category android:name="android.intent.category.LAUNCHER" />
+32-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:24:17-77
+32-->C:\Users\Chris\AndroidStudioProjects\DoomsdayClock\android\AndroidManifest.xml:24:27-74
+33            </intent-filter>
+34        </activity>
+35    </application>
+36
+37</manifest>

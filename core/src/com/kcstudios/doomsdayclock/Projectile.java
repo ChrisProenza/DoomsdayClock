@@ -119,6 +119,9 @@ public class Projectile {
         rotation+=rotationSpeed;
         return (float)rotation;
     }
+    public float getCurrentRotation() {
+        return (float)rotation;
+    }
 
     public void setRotation(double rotation) {
         this.rotation = rotation;
