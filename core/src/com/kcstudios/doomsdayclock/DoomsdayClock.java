@@ -30,7 +30,7 @@ import java.util.Random;
 public class DoomsdayClock extends ApplicationAdapter implements ApplicationListener, InputProcessor {
 	SpriteBatch batch;
 
-	boolean inMenu = false;
+	boolean inMenu = true;
 	boolean lvlUp = false;
 	boolean stageSelect = false;
 	boolean setPaused = false;
@@ -69,6 +69,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	private final int StageHeight = 20;
 	// Background
 	private Texture background;
+	private Texture menuScreen;
 	private Texture grassTile;
 	private Texture horizontalWall;
 	private Texture verticalWall;
@@ -77,6 +78,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	private Texture confirmButton;
 	private Texture selectionBox;
 	private Map<Integer, Texture> skillTextures;
+	private Map<Integer, Sound> weaponSounds;
 	private Map<Integer, Sound> enemySounds;
 	private Map<Integer, Sound> enemyDeathSounds;
 	private Map<Integer, Double> enemySoundDelay;
@@ -85,6 +87,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	private int backgroundX = 0;
 	private int backgroundY = 0;
 	private Map<LocationPair, Texture> environment;
+	private Map<LocationPair, Boolean> obstructionMap;
 	// Animations
 	private Texture swordSwing;
 	class touchInfo {
@@ -93,14 +96,12 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		public boolean touched = false;
 	}
 	// Sounds
+	private Music menuTheme;
 	private Music stage001;
 	private Sound playerAttackSound;
 	private Sound playerDeathSound;
 	private Sound levelUpSound;
 	private Sound deathSpawn;
-	private Sound hit;
-	private Sound axe;
-	private Sound dagger;
 
 	private final Map<Integer, touchInfo> touches = new HashMap<Integer, touchInfo>();
 	private final List<Projectile> projectiles = new ArrayList<>();
@@ -112,6 +113,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		batch = new SpriteBatch();
 		camera = new OrthographicCamera();
 		viewport = new FillViewport(200, 200, camera);
+		menuScreen = new Texture("backgrounds/MainMenuScreen.png");
 		background = new Texture("backgrounds/Background.png");
 		grassTile = new Texture("Environment/GrassTile.png");
 		horizontalWall = new Texture("Environment/Wall.png");
@@ -129,10 +131,12 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		skillTextures.put(4, new Texture("buttons/Skill1.png"));
 		skillTextures.put(5, new Texture("buttons/Skill2.png"));
 		skillTextures.put(6, new Texture("buttons/Skill3.png"));
+		skillTextures.put(7, new Texture("animations/FlowerOfLife.png"));
 		// TODO - SaveData
 		backgroundX = 0;
 		backgroundY = 0;
 		environment = new HashMap<>();
+		obstructionMap = new HashMap<>();
 		generateMap();
 		Gdx.input.setInputProcessor(this);
 		for (int i = 0; i < 5; i++) {
@@ -140,9 +144,10 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 		player = new Player();
 		// Sounds
+		menuTheme = Gdx.audio.newMusic(Gdx.files.internal("sounds/MainTheme.mp3"));
 		stage001 = Gdx.audio.newMusic(Gdx.files.internal("sounds/stage001.mp3"));
-		stage001.setVolume(.5F);
-		stage001.play();
+		menuTheme.setVolume(.5F);
+		menuTheme.play();
 		playerAttackSound = Gdx.audio.newSound(Gdx.files.internal("sounds/PlayerAttack.mp3"));
 		playerDeathSound = Gdx.audio.newSound(Gdx.files.internal("sounds/PlayerDeath.mp3"));
 		deathSpawn = Gdx.audio.newSound(Gdx.files.internal("sounds/DeathSpawn.mp3"));
@@ -165,15 +170,25 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		enemyDeathSounds.put(12, Gdx.audio.newSound(Gdx.files.internal("sounds/HuntressDeath.mp3")));
 		enemyDeathSounds.put(42, Gdx.audio.newSound(Gdx.files.internal("sounds/GoblinDeath.mp3")));
 		enemyDeathSounds.put(69, Gdx.audio.newSound(Gdx.files.internal("sounds/SkeletonWarriorDeath.mp3")));
-
+		weaponSounds = new HashMap<>();
+		weaponSounds.put(0, Gdx.audio.newSound(Gdx.files.internal("sounds/DaggerSound.mp3")));
+		weaponSounds.put(1, Gdx.audio.newSound(Gdx.files.internal("sounds/DaggerSound.mp3")));
+		weaponSounds.put(2, Gdx.audio.newSound(Gdx.files.internal("sounds/SpectralSound.mp3")));
+		weaponSounds.put(3, Gdx.audio.newSound(Gdx.files.internal("sounds/AxeSound.mp3")));
+		weaponSounds.put(4, Gdx.audio.newSound(Gdx.files.internal("sounds/FlowerSound.mp3")));
 	}
 
 	private void generateMap() {
 		Random random = new Random();
 		for(int x = 0; x < 10; x++) {
 			for(int y = 0; y < 10; y++) {
-				Integer randX = (random.nextInt(200) + x * 200) - 1000;
-				Integer randY = (random.nextInt(200) + y * 200) - 1000;
+				int randX = (random.nextInt(200) + x * 200) - 1000;
+				int randY = (random.nextInt(200) + y * 200) - 1000;
+				for(int i = randX - 3; i < randX + 3; i++){
+					for(int j = randY - 3; j < randY +3; j++){
+						obstructionMap.put(new LocationPair(i, j), true);
+					}
+				}
 				environment.put(new LocationPair(randX, randY), pillarTile);
 			}
 		}
@@ -187,15 +202,9 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	@Override
 	public void render () {
 		ScreenUtils.clear(0, 0, 0, 1);
-		// TODO - inMenu needs to be reversed once a menu is added
 		if (inMenu) {
 			batch.begin();
 			drawMenu();
-			batch.end();
-			frameRenderDelta = 0;
-		} else if (stageSelect){
-			batch.begin();
-			drawStage();
 			batch.end();
 			frameRenderDelta = 0;
 		} else {
@@ -236,6 +245,15 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 				}
 				if (frameRenderDelta > .033) {
 					if (player.getState() == 1) {
+						// Check boundaries
+						if (deltaVx + player.getX() < -1000 || deltaVx + player.getX() > 1000
+								|| detectMovementCollisionX(player, deltaVx)) {
+							deltaVx = 0;
+						}
+						if (deltaVy + player.getY() < -1000 || deltaVy + player.getY() > 1000
+								|| detectMovementCollisionY(player, deltaVy)) {
+							deltaVy = 0;
+						}
 						player.move(deltaVx, deltaVy);
 					}
 					moveEnemy();
@@ -250,8 +268,8 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 					drawBackground();
 					drawEnemies();
 				}
-				drawPlayer();
 				drawProjectiles();
+				drawPlayer();
 				if (player.getState() != 3)
 					drawForeground();
 				drawUI();
@@ -269,12 +287,11 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
-	private void drawStage() {
-
-	}
-
 	private void drawMenu() {
-
+		batch.draw(menuScreen, 0, 50, 200, 100);
+		BitmapFont font = new BitmapFont();
+		font.getData().setScale((float) .5, (float) .5);
+		font.draw(batch, "Tap to start...", 75, 60);
 	}
 
 	private void moveEnemy() {
@@ -314,7 +331,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 					Y = ((random.nextInt(2) - 1) * 200) - 100;
 					Y = Y + player.getY();
 				}
-				enemies.add(new SkeletonEnemy(0, X, Y, triggerSkeletons));
+				enemies.add(new SkeletonEnemy(0, X, Y, triggerSkeletons/6));
 			}
 		}
 		// Spawn increasing number of enemyTwo every 15 seconds
@@ -336,7 +353,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 					Y = ((random.nextInt(2) - 1) * 200) - 100;
 					Y = Y + player.getY();
 				}
-				enemies.add(new EvilEyeEnemy(1, X, Y, triggerTwo));
+				enemies.add(new EvilEyeEnemy(1, X, Y, triggerTwo/4));
 			}
 		}
 		// Spawn increasing number of enemyThree every 30 seconds
@@ -358,7 +375,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 					Y = ((random.nextInt(2) - 1) * 200) - 100;
 					Y = Y + player.getY();
 				}
-				enemies.add(new SkeletonWarrior(2, X, Y, triggerThree));
+				enemies.add(new SkeletonWarrior(2, X, Y, triggerThree/3));
 			}
 		}
 		// Spawn increasing number of enemyFour every 20 seconds
@@ -380,7 +397,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 					Y = ((random.nextInt(2) - 1) * 200) - 100;
 					Y = Y + player.getY();
 				}
-				enemies.add(new GoblinEnemy(2, X, Y, triggerFour));
+				enemies.add(new GoblinEnemy(2, X, Y, triggerFour/2));
 			}
 		}
 		// Spawn increasing number of enemyFive every 60 seconds
@@ -407,7 +424,6 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 		// Spawn Boss every 60 seconds
 		if (elapsedTime > ((triggerBoss+1) * 60) && enemies.size() < 200) {
-			deathSpawn.play();
 			triggerBoss++;
 			for (int i = 0; i < triggerBoss; i++) {
 				float X = 0;
@@ -459,26 +475,26 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 						20, 20);
 			}
 		}
-		if(player.getX() < -880) {
+		if(player.getX() - 50 < -1000) {
 			for(int y = -1; y < 11; y++) {
 				batch.draw(verticalWall, -950 - player.getX(),
 						(backgroundY + y) * 20 + player.getY(),
 						2, 20);
 			}
-		} else if (player.getX() > 880) {
+		} else if (player.getX() + 150 > 1000) {
 			for(int y = -1; y < 11; y++) {
 				batch.draw(verticalWall, 996 - player.getX(),
 						(backgroundY + y) * 20 + player.getY(),
 						2, 20);
 			}
 		}
-		if(player.getY() < -880) {
+		if(player.getY() - 50 < -1000) {
 			for(int x = -1; x < 11; x++) {
 				batch.draw(horizontalWall, (backgroundX + x) * 20 - player.getX(),
 						-910 + player.getY(),
 						20, 20);
 			}
-		} else if (player.getY() > 880) {
+		} else if (player.getY() + 150 > 1000) {
 			for(int x = -1; x < 11; x++) {
 				batch.draw(horizontalWall, (backgroundX + x) * 20 - player.getX(),
 						910 + player.getY(),
@@ -585,7 +601,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 			}
 		} else {
 			font.draw(batch, "Tap To Restart", 75, 120);
-			font.draw(batch, "Tap and hold to return to menu", 50, 80);
+			//font.draw(batch, "Tap and hold to return to menu", 50, 80);
 		}
 	}
 
@@ -621,91 +637,105 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		if (inMenu) {
+			menuTheme.stop();
+			deathSpawn.play();
+			stage001.setVolume(.5F);
+			stage001.play();
+			inMenu = false;
+		} else {
+			if (!setPaused) {
+				if ((Gdx.graphics.getHeight() * .1) < screenY
+						|| (Gdx.graphics.getWidth() * .9 > screenX)) {
+					if (player.getState() != 3) {
+						if (player.getState() != 2 && touches.get(pointer).touchX > Gdx.graphics.getWidth()/2) {
+							player.setState(2);
+							playerAttackSound.play();
+							playerAttackDeltaTime = 0;
+						}
+						if (player.getState() == 1) {
+							player.setState(0);
+						}
+					} else {
+						restart();
+					}
+				} else {
+					player.setState(0);
+					deltaVx = 0;
+					deltaVy = 0;
+					setPaused = true;
+					stage001.pause();
+				}
+			} else {
+				setPaused = false;
+				stage001.play();
+			}
+			if (lvlUp) {
+				if (screenX > Gdx.graphics.getWidth() * .4
+						&& screenX < Gdx.graphics.getWidth() * .6
+						&& screenY > Gdx.graphics.getHeight() * .8
+						&& skillSelection != 0) {
+					lvlUp = false;
+					int skill = skillList.get(skillSelection - 1);
+					if (skill == 0) {
+						player.setHealing(player.getHealing() + 1);
+					} else if (skill == 1) {
+						player.setSpeed(player.getSpeed() + 1);
+					} else if (skill == 2) {
+						player.setSwordDamage(player.getSwordDamage() * 2);
+					} else if (skill == 3) {
+						if (player.getProjectiles().containsKey(0)) {
+							player.getProjectiles().get(0).lvlUp();
+						} else
+							player.getProjectiles().put(0, new Dagger());
+					} else if (skill == 4) {
+						if (player.getProjectiles().containsKey(1)) {
+							player.getProjectiles().get(1).lvlUp();
+						} else
+							player.getProjectiles().put(1, new SpinningKatana());
+					} else if (skill == 5) {
+						if (player.getProjectiles().containsKey(2)) {
+							player.getProjectiles().get(2).lvlUp();
+						} else
+							player.getProjectiles().put(2, new SpinningBlades());
+					} else if (skill == 6) {
+						if (player.getProjectiles().containsKey(3)) {
+							player.getProjectiles().get(3).lvlUp();
+						} else {
+							player.getProjectiles().put(3, new BoomerangAxe());
+						}
+					} else if (skill == 7) {
+						if (player.getProjectiles().containsKey(4)) {
+							player.getProjectiles().get(4).lvlUp();
+						} else {
+							player.getProjectiles().put(4, new FlowerOfLife());
+						}
+					}
+				}
+				if (screenX > Gdx.graphics.getWidth() * .4
+						&& screenX < Gdx.graphics.getWidth() * .6
+						&& screenY < Gdx.graphics.getHeight() * .8
+						&& screenY > Gdx.graphics.getHeight() * .6) {
+					skillSelection = 1;
+				} else if (screenX > Gdx.graphics.getWidth() * .4
+						&& screenX < Gdx.graphics.getWidth() * .6
+						&& screenY < Gdx.graphics.getHeight() * .6
+						&& screenY > Gdx.graphics.getHeight() * .4) {
+					skillSelection = 2;
+				} else if (screenX > Gdx.graphics.getWidth() * .4
+						&& screenX < Gdx.graphics.getWidth() * .6
+						&& screenY < Gdx.graphics.getHeight() * .4
+						&& screenY > Gdx.graphics.getHeight() * .2) {
+					skillSelection = 3;
+				} else {
+					skillSelection = 0;
+				}
+			}
+		}
 		if (pointer < 5) {
 			touches.get(pointer).touchX = 0;
 			touches.get(pointer).touchY = 0;
 			touches.get(pointer).touched = false;
-		}
-		if (!setPaused) {
-			if ((Gdx.graphics.getHeight() * .1) < screenY
-					|| (Gdx.graphics.getWidth() * .9 > screenX)) {
-				if (player.getState() != 3) {
-					if (player.getState() == 0) {
-						player.setState(2);
-						playerAttackSound.play();
-						playerAttackDeltaTime = 0;
-					}
-					if (player.getState() == 1) {
-						player.setState(0);
-					}
-				} else {
-					restart();
-				}
-			} else {
-				player.setState(0);
-				deltaVx = 0;
-				deltaVy = 0;
-				setPaused = true;
-				stage001.pause();
-			}
-		} else {
-			setPaused = false;
-			stage001.play();
-		}
-		if (lvlUp) {
-			if(screenX > Gdx.graphics.getWidth() * .4
-					&& screenX < Gdx.graphics.getWidth() * .6
-					&& screenY > Gdx.graphics.getHeight() * .8
-					&& skillSelection != 0) {
-				lvlUp = false;
-				int skill = skillList.get(skillSelection-1);
-				if(skill == 0) {
-					player.setHealing(player.getHealing() + 1);
-				} else if (skill == 1) {
-					player.setSpeed(player.getSpeed() + 1);
-				} else if (skill == 2) {
-					player.setSwordDamage(player.getSwordDamage() * 2);
-				} else if (skill == 3) {
-					if(player.getProjectiles().containsKey(0)) {
-						player.getProjectiles().get(0).lvlUp();
-					} else
-						player.getProjectiles().put(0, new Dagger());
-				} else if (skill == 4) {
-					if(player.getProjectiles().containsKey(1)) {
-						player.getProjectiles().get(1).lvlUp();
-					} else
-						player.getProjectiles().put(1, new SpinningKatana());
-				} else if (skill == 5) {
-					if(player.getProjectiles().containsKey(2)) {
-						player.getProjectiles().get(2).lvlUp();
-					} else
-						player.getProjectiles().put(2, new SpinningBlades());
-				} else if (skill == 6) {
-					if(player.getProjectiles().containsKey(3)) {
-						player.getProjectiles().get(3).lvlUp();
-					} else {
-						player.getProjectiles().put(3, new BoomerangAxe());
-					}
-				}
-			}
-			if(screenX > Gdx.graphics.getWidth() * .4
-					&& screenX < Gdx.graphics.getWidth() * .6
-					&& screenY < Gdx.graphics.getHeight() * .8
-					&& screenY > Gdx.graphics.getHeight() * .6) {
-				skillSelection = 1;
-			} else if(screenX > Gdx.graphics.getWidth() * .4
-					&& screenX < Gdx.graphics.getWidth() * .6
-					&& screenY < Gdx.graphics.getHeight() * .6
-					&& screenY > Gdx.graphics.getHeight() * .4) {
-				skillSelection = 2;
-			} else if(screenX > Gdx.graphics.getWidth() * .4
-					&& screenX < Gdx.graphics.getWidth() * .6
-					&& screenY < Gdx.graphics.getHeight() * .4
-					&& screenY > Gdx.graphics.getHeight() * .2) {
-				skillSelection = 3;
-			} else {
-				skillSelection = 0;
-			}
 		}
 		return true;
 	}
@@ -714,6 +744,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		for(Skill skill : player.getProjectiles().values()) {
 			if (elapsedTime - skill.lastTick > skill.getCooldown()) {
 				skill.setLastTick(elapsedTime);
+				weaponSounds.get(skill.getId()).play();
 				for (int i = 0; i < skill.getNumberProjectiles(); i++) {
 					projectiles.add(new Projectile(
 									skill, player.getX(), player.getY(), i, playerAngle, elapsedTime
@@ -765,9 +796,9 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 					if (Math.hypot(projectile.getX() - enemy.getX(), projectile.getY() - enemy.getY())
 							< (projectile.size + enemy.getSize() * 10)) {
 						enemy.setHp(enemy.getHp() - projectile.getDamage());
-						double angle = Math.atan2((projectile.getX() - enemy.getX()), (projectile.getY() - enemy.getY()));
+						double angle = Math.atan2((player.getY() - enemy.getY()), (player.getX() - enemy.getX()));
 						enemy.setX((float) (enemy.getX() + Math.cos(angle) * projectile.getKnockback()));
-						enemy.setY((float) (enemy.getX() + Math.sin(angle) * projectile.getKnockback()));
+						enemy.setY((float) (enemy.getY() + Math.sin(angle) * projectile.getKnockback()));
 						if (enemy.getHp() <= 0) {
 							if(enemyDeathSounds.containsKey(enemy.type)) {
 								enemyDeathSounds.get(enemy.type).play();
@@ -814,7 +845,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	private void randomizeAbilities() {
 		Random random = new Random();
 		List<Integer> skills = new ArrayList<>();
-		for(int i = 0; i < 7; i++) {
+		for(int i = 0; i < 8; i++) {
 			skills.add(i);
 		}
 		skillList = new ArrayList<>();
@@ -890,30 +921,19 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		if (!setPaused) {
+		if (player.getState() != 2 && !setPaused && (touches.get(pointer).touchX < Gdx.graphics.getWidth()/2)) {
 			if ((Gdx.graphics.getHeight() * .1) < touches.get(pointer).touchY
 					|| (Gdx.graphics.getWidth() * .9 > touches.get(pointer).touchX)) {
-				if (player.getState() != 2) {
-					if ((Math.abs(touches.get(pointer).touchX - screenX) > 10
-							|| Math.abs(touches.get(pointer).touchY - screenY) > 10)
-							&& player.getState() != 3) {
-						double deltaY = screenY - touches.get(pointer).touchY;
-						double deltaX = screenX - touches.get(pointer).touchX;
-						playerAngle = (float) Math.atan2(deltaY, deltaX);
-						deltaVx = (float) (player.getSpeed() * Math.cos(playerAngle));
-						// Check boundaries
-						if (deltaVx + player.getX() < -1000 || deltaVx + player.getX() > 1000
-								|| detectMovementCollisionX(player, deltaVx)) {
-							deltaVx = 0;
-						}
-						deltaVy = (float) (player.getSpeed() * Math.sin(playerAngle));
-						if (deltaVy + player.getY() < -1000 || deltaVy + player.getY() > 1000
-								|| detectMovementCollisionY(player, deltaVy)) {
-							deltaVy = 0;
-						}
-						// Set player is moving
-						player.setState(1);
-					}
+				if ((Math.abs(touches.get(pointer).touchX - screenX) > 10
+						|| Math.abs(touches.get(pointer).touchY - screenY) > 10)
+						&& player.getState() != 3) {
+					double deltaY = screenY - touches.get(pointer).touchY;
+					double deltaX = screenX - touches.get(pointer).touchX;
+					playerAngle = (float) Math.atan2(deltaY, deltaX);
+					deltaVx = (float) (player.getSpeed() * Math.cos(playerAngle));
+					deltaVy = (float) (player.getSpeed() * Math.sin(playerAngle));
+					// Set player is moving
+					player.setState(1);
 				}
 			} else {
 				deltaVy = 0;
@@ -925,11 +945,13 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	}
 
 	private boolean detectMovementCollisionX(Player player, float deltaVx) {
-		return false;
+		return obstructionMap.containsKey(new LocationPair(((player.getX()+deltaVx) / 5),
+				(player.getY()/5)));
 	}
 
 	private boolean detectMovementCollisionY(Player player, float deltaVy) {
-		return false;
+		return obstructionMap.containsKey(new LocationPair((player.getX() / 5),
+				((player.getY() + deltaVy)/5)));
 	}
 
 	@Override

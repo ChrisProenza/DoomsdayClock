@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 public class EvilEyeEnemy extends Enemy {
 
     EvilEyeEnemy(int id, float x, float y, int wave) {
+        wave += 1;
         this.hp = 10 * wave;
         this.id = id;
         this.X = x;

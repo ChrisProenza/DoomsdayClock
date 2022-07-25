@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 public class SkeletonEnemy extends Enemy {
 
     SkeletonEnemy(int id, float x, float y, int wave) {
+        wave += 1;
         this.hp = wave;
         this.id = id;
         this.X = x;

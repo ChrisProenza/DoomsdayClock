@@ -28,7 +28,7 @@ public class Player {
 
 
     Player() {
-        speed = 1.5;
+        speed = 100;
         swordDamage = 5;
         lvl = 1;
         xp = 0;
@@ -185,8 +185,8 @@ public class Player {
     }
 
     public double getSpeed() {
-        if (speed > 5) {
-            speed = 5;
+        if (speed > 10) {
+            speed = 10;
         }
         return speed;
     }

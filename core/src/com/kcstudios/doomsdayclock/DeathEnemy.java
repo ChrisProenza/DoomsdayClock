@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 public class DeathEnemy extends Enemy {
 
     DeathEnemy(int id, float x, float y, int wave) {
+        wave += 1;
         this.hp = 111 * wave;
         this.id = id;
         this.X = x;
@@ -12,7 +13,7 @@ public class DeathEnemy extends Enemy {
         this.xp = 120 * wave;
         this.type = 111;
         this.damage = 50 * wave;
-        this.speed = .5F * wave;
+        this.speed = 1F * wave;
         this.frame = 0;
         this.runSprites = EnemyTextureLoader.getInstance().deathRunSprites;
         this.currentSprite = runSprites[0];

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 public class GoblinEnemy extends Enemy {
 
     GoblinEnemy(int id, float x, float y, int wave) {
+        wave += 1;
         this.hp = 5 * wave;
         this.id = id;
         this.X = x;
