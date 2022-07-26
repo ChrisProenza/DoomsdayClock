@@ -11,4 +11,7 @@ public class LocationPair {
         First = x.intValue();
         Second = y.intValue();
     }
+    public String getKey(){
+        return First+"."+Second;
+    }
 }

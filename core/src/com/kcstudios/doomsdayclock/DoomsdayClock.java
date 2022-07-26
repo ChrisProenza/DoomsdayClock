@@ -8,7 +8,6 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -87,7 +86,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 	private int backgroundX = 0;
 	private int backgroundY = 0;
 	private Map<LocationPair, Texture> environment;
-	private Map<LocationPair, Boolean> obstructionMap;
+	private Map<String, Boolean> obstructionMap;
 	// Animations
 	private Texture swordSwing;
 	class touchInfo {
@@ -105,6 +104,8 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 
 	private final Map<Integer, touchInfo> touches = new HashMap<Integer, touchInfo>();
 	private final List<Projectile> projectiles = new ArrayList<>();
+
+	//----- App Functions -----
 
 	@Override
 	public void create () {
@@ -132,11 +133,10 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		skillTextures.put(5, new Texture("buttons/Skill2.png"));
 		skillTextures.put(6, new Texture("buttons/Skill3.png"));
 		skillTextures.put(7, new Texture("animations/FlowerOfLife.png"));
-		// TODO - SaveData
 		backgroundX = 0;
 		backgroundY = 0;
 		environment = new HashMap<>();
-		obstructionMap = new HashMap<>();
+		obstructionMap = new HashMap<String, Boolean>();
 		generateMap();
 		Gdx.input.setInputProcessor(this);
 		for (int i = 0; i < 5; i++) {
@@ -176,22 +176,6 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		weaponSounds.put(2, Gdx.audio.newSound(Gdx.files.internal("sounds/SpectralSound.mp3")));
 		weaponSounds.put(3, Gdx.audio.newSound(Gdx.files.internal("sounds/AxeSound.mp3")));
 		weaponSounds.put(4, Gdx.audio.newSound(Gdx.files.internal("sounds/FlowerSound.mp3")));
-	}
-
-	private void generateMap() {
-		Random random = new Random();
-		for(int x = 0; x < 10; x++) {
-			for(int y = 0; y < 10; y++) {
-				int randX = (random.nextInt(200) + x * 200) - 1000;
-				int randY = (random.nextInt(200) + y * 200) - 1000;
-				for(int i = randX - 3; i < randX + 3; i++){
-					for(int j = randY - 3; j < randY +3; j++){
-						obstructionMap.put(new LocationPair(i, j), true);
-					}
-				}
-				environment.put(new LocationPair(randX, randY), pillarTile);
-			}
-		}
 	}
 
 	@Override public void resize(int width, int height) {
@@ -254,6 +238,19 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 								|| detectMovementCollisionY(player, deltaVy)) {
 							deltaVy = 0;
 						}
+						if(player.getX() > 999) {
+							player.setX(999);
+						}
+						if(player.getX() < -999) {
+							player.setX(-999);
+						}
+						if(player.getY() > 999) {
+							player.setY(999);
+
+						}
+						if(player.getY() < -999) {
+							player.setY(-999);
+						}
 						player.move(deltaVx, deltaVy);
 					}
 					moveEnemy();
@@ -278,11 +275,213 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
+
+	@Override
+	public void dispose () {
+		batch.dispose();
+		background.dispose();
+	}
+
+	//----- UI Functions -----
+
+	@Override
+	public boolean keyDown(int key) {
+		return false;
+	}
+	@Override
+	public boolean keyUp(int key) {
+		return false;
+	}
+
+	@Override
+	public boolean keyTyped(char character) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		if (pointer < 5) {
+			touches.get(pointer).touchX = screenX;
+			touches.get(pointer).touchY = screenY;
+			touches.get(pointer).touched = true;
+		}
+		return true;
+	}
+
+	@Override
+	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		if (inMenu) {
+			menuTheme.stop();
+			deathSpawn.play();
+			stage001.setVolume(.5F);
+			stage001.play();
+			inMenu = false;
+		} else {
+			if (!setPaused) {
+				if ((Gdx.graphics.getHeight() * .1) < screenY
+						|| (Gdx.graphics.getWidth() * .9 > screenX)) {
+					if (player.getState() != 3) {
+						if (player.getState() != 2 && touches.get(pointer).touchX > Gdx.graphics.getWidth()/2) {
+							player.setState(2);
+							playerAttackSound.play();
+							playerAttackDeltaTime = 0;
+						}
+						if (player.getState() == 1) {
+							player.setState(0);
+						}
+					} else {
+						restart();
+					}
+				} else {
+					player.setState(0);
+					deltaVx = 0;
+					deltaVy = 0;
+					setPaused = true;
+					stage001.pause();
+				}
+			} else {
+				setPaused = false;
+				stage001.play();
+			}
+			if (lvlUp) {
+				if (screenX > Gdx.graphics.getWidth() * .4
+						&& screenX < Gdx.graphics.getWidth() * .6
+						&& screenY > Gdx.graphics.getHeight() * .8
+						&& skillSelection != 0) {
+					lvlUp = false;
+					int skill = skillList.get(skillSelection - 1);
+					if (skill == 0) {
+						player.setHealing(player.getHealing() + 1);
+					} else if (skill == 1) {
+						player.setSpeed(player.getSpeed() + 1);
+					} else if (skill == 2) {
+						player.setSwordDamage(player.getSwordDamage() * 2);
+					} else if (skill == 3) {
+						if (player.getProjectiles().containsKey(0)) {
+							player.getProjectiles().get(0).lvlUp();
+						} else
+							player.getProjectiles().put(0, new Dagger());
+					} else if (skill == 4) {
+						if (player.getProjectiles().containsKey(1)) {
+							player.getProjectiles().get(1).lvlUp();
+						} else
+							player.getProjectiles().put(1, new SpinningKatana());
+					} else if (skill == 5) {
+						if (player.getProjectiles().containsKey(2)) {
+							player.getProjectiles().get(2).lvlUp();
+						} else
+							player.getProjectiles().put(2, new SpinningBlades());
+					} else if (skill == 6) {
+						if (player.getProjectiles().containsKey(3)) {
+							player.getProjectiles().get(3).lvlUp();
+						} else {
+							player.getProjectiles().put(3, new BoomerangAxe());
+						}
+					} else if (skill == 7) {
+						if (player.getProjectiles().containsKey(4)) {
+							player.getProjectiles().get(4).lvlUp();
+						} else {
+							player.getProjectiles().put(4, new FlowerOfLife());
+						}
+					}
+				}
+				if (screenX > Gdx.graphics.getWidth() * .4
+						&& screenX < Gdx.graphics.getWidth() * .6
+						&& screenY < Gdx.graphics.getHeight() * .8
+						&& screenY > Gdx.graphics.getHeight() * .6) {
+					skillSelection = 1;
+				} else if (screenX > Gdx.graphics.getWidth() * .4
+						&& screenX < Gdx.graphics.getWidth() * .6
+						&& screenY < Gdx.graphics.getHeight() * .6
+						&& screenY > Gdx.graphics.getHeight() * .4) {
+					skillSelection = 2;
+				} else if (screenX > Gdx.graphics.getWidth() * .4
+						&& screenX < Gdx.graphics.getWidth() * .6
+						&& screenY < Gdx.graphics.getHeight() * .4
+						&& screenY > Gdx.graphics.getHeight() * .2) {
+					skillSelection = 3;
+				} else {
+					skillSelection = 0;
+				}
+			}
+		}
+		if (pointer < 5) {
+			touches.get(pointer).touchX = 0;
+			touches.get(pointer).touchY = 0;
+			touches.get(pointer).touched = false;
+		}
+		return true;
+	}
+
+
+	@Override
+	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		if (player.getState() != 2 && !setPaused && (touches.get(pointer).touchX < Gdx.graphics.getWidth()/2)) {
+			if ((Gdx.graphics.getHeight() * .1) < touches.get(pointer).touchY
+					|| (Gdx.graphics.getWidth() * .9 > touches.get(pointer).touchX)) {
+				if ((Math.abs(touches.get(pointer).touchX - screenX) > 10
+						|| Math.abs(touches.get(pointer).touchY - screenY) > 10)
+						&& player.getState() != 3) {
+					double deltaY = screenY - touches.get(pointer).touchY;
+					double deltaX = screenX - touches.get(pointer).touchX;
+					playerAngle = (float) Math.atan2(deltaY, deltaX);
+					deltaVx = (float) (player.getSpeed() * Math.cos(playerAngle));
+					deltaVy = (float) (player.getSpeed() * Math.sin(playerAngle));
+					// Set player is moving
+					player.setState(1);
+				}
+			} else {
+				deltaVy = 0;
+				deltaVx = 0;
+				player.setState(0);
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY) {
+		return false;
+	}
+
+	@Override
+	public boolean scrolled(float amountX, float amountY) {
+		return false;
+	}
+
+	//----- Draw Functions -----
+
+	private void generateMap() {
+		Random random = new Random();
+		for(int x = 0; x < 10; x++) {
+			for(int y = 0; y < 10; y++) {
+				int randX = (random.nextInt(200) + x * 200) - 1000;
+				int randY = (random.nextInt(200) + y * 200) - 1000;
+				if (randX != 0 && randY != 0) {
+					for (int i = randX / 5 - 3; i < randX / 5 + 3; i++) {
+						for (int j = randY / 5 - 3; j < randY / 5 + 3; j++) {
+							obstructionMap.put(i + "." + j, true);
+						}
+					}
+					environment.put(new LocationPair(randX, randY), pillarTile);
+				}
+			}
+		}
+	}
+
+
 	private void drawForeground() {
 		for (LocationPair pair:environment.keySet()) {
 			if(player.getY() < pair.Second) {
 				batch.draw(environment.get(pair), (85 - (player.getX() - pair.First)),
 						(85 + (player.getY() - pair.Second)), 30, 30);
+			}
+		}
+		if (player.getY() > 850) {
+			for(int x = -1; x < 11; x++) {
+				batch.draw(horizontalWall, (backgroundX + x) * 20 - player.getX(),
+						player.getY() - 900,
+						20, 20);
 			}
 		}
 	}
@@ -293,7 +492,173 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		font.getData().setScale((float) .5, (float) .5);
 		font.draw(batch, "Tap to start...", 75, 60);
 	}
+	// Draws the background image
+	public void drawBackground() {
+		backgroundX = (int) (player.getX() / 20);
+		backgroundY = (int) -(player.getY() / 20);
+		for(int x = -1; x < 11; x++) {
+			for(int y = -1; y < 11; y++) {
+				batch.draw(grassTile, (backgroundX + x) * 20 - player.getX(), (backgroundY + y) * 20 + player.getY(),
+						20, 20);
+			}
+		}
+		if(player.getX() - 50 < -1000) {
+			for(int y = -1; y < 11; y++) {
+				batch.draw(verticalWall, -902 - player.getX(),
+						(backgroundY + y) * 20 + player.getY(),
+						2, 20);
+			}
+		} else if (player.getX() + 150 > 1000) {
+			for(int y = -1; y < 11; y++) {
+				batch.draw(verticalWall, 1102 - player.getX(),
+						(backgroundY + y) * 20 + player.getY(),
+						2, 20);
+			}
+		}
+		for (LocationPair pair:environment.keySet()) {
+			if (player.getY() > pair.Second) {
+				batch.draw(environment.get(pair), (85 - (player.getX() - pair.First)),
+						(85 + (player.getY() - pair.Second)), 30, 30);
+			}
+		}
+		if(player.getY() < -850) {
+			for(int x = -1; x < 11; x++) {
+				batch.draw(horizontalWall, (backgroundX + x) * 20 - player.getX(),
+						player.getY() + 1090,
+						20, 20);
+			}
+		}
 
+	}
+
+	public void drawPlayer() {
+		int state = player.getState();
+		boolean nextFrame = false;
+		if (playerDeltaTime > .066) {
+			playerDeltaTime = 0;
+			nextFrame = true;
+		}
+		if (player.getHp() <= 0 && player.getState() != 3) {
+			playerDeathSound.play();
+			player.setState(3);
+		}
+		Texture currentSprite = player.getCurrentSprite(nextFrame);
+		if (state == 1) {
+			batch.draw(currentSprite, 90, 90, 20, 20, 0, 0,
+					96, 64, !(deltaVx > 0), false);
+		} else if (state == 2) {
+			if (playerAttackDeltaTime > .25) {
+				playerManualAttack();
+			}
+			batch.draw(currentSprite, 90, 90, 20, 20, 0, 0,
+					96, 64, !(deltaVx > 0), false);
+		} else if (state == 3) {
+			batch.draw(currentSprite, 90, 90, 20, 20, 0, 0,
+					144, 64, !(deltaVx > 0), false);
+		} else {
+			batch.draw(currentSprite, 90, 90, 20, 20, 10, 0,
+					96, 64, !(deltaVx > 0), false);
+		}
+	}
+
+	public void drawEnemies() {
+		boolean nextFrame = false;
+		if (enemyDeltaTime > .066) {
+			enemyDeltaTime = 0;
+			nextFrame = true;
+		}
+		if (enemies.size() > 0) {
+			for (Enemy enemy : enemies) {
+				if(enemySounds.containsKey(enemy.type)
+						&& elapsedTime - enemySoundDelay.get(enemy.type) > 3) {
+					enemySoundDelay.put(enemy.type, elapsedTime);
+					enemySounds.get(enemy.type).play();
+				}
+				Texture currentSprite = enemy.getCurrentSprite(nextFrame);
+				int h = currentSprite.getHeight() * enemy.getSize();
+				int w = currentSprite.getWidth() * enemy.getSize();
+				if (player.getX() > enemy.getX())
+					batch.draw(currentSprite, ((100 - w / 8) - (player.getX() - enemy.getX())),
+							((100 - h / 8) + (player.getY() - enemy.getY())),
+							(w / 4), (h / 4));
+				else
+					batch.draw(currentSprite, ((100 - w / 8) - (player.getX() - enemy.getX())),
+							((100 - h / 8) + (player.getY() - enemy.getY())),
+							(w / 4), (h / 4), 0, 0, (w/enemy.getSize()), (h/enemy.getSize()),
+							true, false);
+			}
+		}
+	}
+
+	public void drawUI() {
+		BitmapFont font = new BitmapFont();
+		font.getData().setScale((float) .5, (float) .5);
+		if (player.getState() != 3) {
+			int minutes = (int) (10 - (elapsedTime / 60));
+			int seconds = ((int) (60 - elapsedTime % 60));
+			font.draw(batch, (int) (minutes) + " :" + seconds, 0, 150);
+			font.setColor(Color.RED);
+			font.draw(batch, "HP:" + player.getHp(), 0, 56);
+			font.setColor(Color.GOLD);
+			font.draw(batch, "Level:" + player.getLvl(), 170, 56);
+			batch.draw(pauseButton, 180, 143, 20, 11);
+			if (setPaused) {
+				font.draw(batch, "Paused", 85, 120);
+				font.draw(batch, "Tap to Unpause", 74, 80);
+			}
+			if(lvlUp) {
+				batch.draw(confirmButton, 80, 46, 40, 20);
+				int i = 1;
+				for(Integer skill:skillList) {
+					batch.draw(skillTextures.get(skill), 80, 46 + (20 * i),
+							40, 20);
+					i++;
+				}
+				if(skillSelection != 0) {
+					batch.draw(selectionBox, 80, 46 + (20 * skillSelection),
+							40, 20);
+				}
+
+				font.draw(batch, "LEVEL UP!!!", 80, 136);
+			}
+		} else {
+			font.draw(batch, "Tap To Restart", 75, 120);
+			//font.draw(batch, "Tap and hold to return to menu", 50, 80);
+		}
+	}
+
+	private void drawProjectiles() {
+		for (Projectile projectile:projectiles) {
+			TextureRegion projectileTexture = new TextureRegion(projectile.getTexture());
+			if (projectile.getID() == 2) {
+				batch.draw(projectileTexture,
+						((100 - projectile.getSize()) - (player.getX() - projectile.getXOnly())),
+						((100 - projectile.getSize()) + (player.getY() - projectile.getYOnly())),
+						projectile.getSize(),
+						projectile.getSize(),
+						projectile.getSize()*2, projectile.getSize()*2,
+						1,
+						1,
+						(float) Math.toDegrees(projectile.getCurrentRotation())
+				);
+			} else {
+				batch.draw(projectileTexture,
+						((100 - projectile.getSize()) - (player.getX() - projectile.getX())),
+						((100 - projectile.getSize()) + (player.getY() - projectile.getY())),
+						projectile.getSize(),
+						projectile.getSize(),
+						projectile.getSize()*2, projectile.getSize()*2,
+						1,
+						1,
+						(float) Math.toDegrees(projectile.getCurrentRotation())
+				);
+			}
+		}
+	}
+
+	//----- Object movement and collisions -----
+
+	// Move the enemies on map
 	private void moveEnemy() {
 		for (Enemy enemy: enemies) {
 
@@ -301,15 +666,27 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 			float eDeltaVy = 0;
 			double deltaY = player.getY() - enemy.getY();
 			double deltaX = player.getX() - enemy.getX();
+
 			if (Math.hypot(deltaX, deltaY) >= 2) {
 				double angle = Math.atan2(deltaY, deltaX);
 				eDeltaVx = (float)(enemy.getSpeed() * Math.cos(angle));
+				if (detectMovementCollisionX(enemy, eDeltaVx)) {
+					eDeltaVx = 0;
+				}
 				eDeltaVy = (float)(enemy.getSpeed() * Math.sin(angle));
+				if (detectMovementCollisionY(enemy, eDeltaVy)) {
+					eDeltaVy = 0;
+				}
+				if (eDeltaVx == 0 && eDeltaVy == 0) {
+					eDeltaVx = 1;
+					eDeltaVy = 1;
+				}
 				enemy.move(eDeltaVx, eDeltaVy);
 			}
 		}
 	}
 
+	// Spawn the various enemies
 	private void spawnEnemy(double elapsedTime) {
 		Random random = new Random();
 		// Spawn increasing number of skeletons every 10 seconds
@@ -445,10 +822,12 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
+	// Get a random spawn
 	private int getSpawn() {
 		return (new Random()).nextInt(100);
 	}
 
+	// Detect enemy collision
 	private void detectEnemyCollision() {
 		double deltaX = 0;
 		double deltaY = 0;
@@ -465,281 +844,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
-	// Draws the background image
-	public void drawBackground() {
-		backgroundX = (int) (player.getX() / 20);
-		backgroundY = (int) -(player.getY() / 20);
-		for(int x = -1; x < 11; x++) {
-			for(int y = -1; y < 11; y++) {
-				batch.draw(grassTile, (backgroundX + x) * 20 - player.getX(), (backgroundY + y) * 20 + player.getY(),
-						20, 20);
-			}
-		}
-		if(player.getX() - 50 < -1000) {
-			for(int y = -1; y < 11; y++) {
-				batch.draw(verticalWall, -950 - player.getX(),
-						(backgroundY + y) * 20 + player.getY(),
-						2, 20);
-			}
-		} else if (player.getX() + 150 > 1000) {
-			for(int y = -1; y < 11; y++) {
-				batch.draw(verticalWall, 996 - player.getX(),
-						(backgroundY + y) * 20 + player.getY(),
-						2, 20);
-			}
-		}
-		if(player.getY() - 50 < -1000) {
-			for(int x = -1; x < 11; x++) {
-				batch.draw(horizontalWall, (backgroundX + x) * 20 - player.getX(),
-						-910 + player.getY(),
-						20, 20);
-			}
-		} else if (player.getY() + 150 > 1000) {
-			for(int x = -1; x < 11; x++) {
-				batch.draw(horizontalWall, (backgroundX + x) * 20 - player.getX(),
-						910 + player.getY(),
-						20, 20);
-			}
-		}
-		for (LocationPair pair:environment.keySet()) {
-			if (player.getY() > pair.Second) {
-				batch.draw(environment.get(pair), (85 - (player.getX() - pair.First)),
-						(85 + (player.getY() - pair.Second)), 30, 30);
-			}
-		}
-	}
-
-	public void drawPlayer() {
-		int state = player.getState();
-		boolean nextFrame = false;
-		if (playerDeltaTime > .066) {
-			playerDeltaTime = 0;
-			nextFrame = true;
-		}
-		if (player.getHp() <= 0 && player.getState() != 3) {
-			playerDeathSound.play();
-			player.setState(3);
-		}
-		Texture currentSprite = player.getCurrentSprite(nextFrame);
-		if (state == 1) {
-			batch.draw(currentSprite, 90, 90, 20, 20, 0, 0,
-					96, 64, !(deltaVx > 0), false);
-		} else if (state == 2) {
-			if (playerAttackDeltaTime > .25) {
-				playerManualAttack();
-			}
-			batch.draw(currentSprite, 90, 90, 20, 20, 0, 0,
-					96, 64, !(deltaVx > 0), false);
-		} else if (state == 3) {
-			batch.draw(currentSprite, 90, 90, 20, 20, 0, 0,
-					144, 64, !(deltaVx > 0), false);
-		} else {
-			batch.draw(currentSprite, 90, 90, 20, 20, 10, 0,
-					96, 64, !(deltaVx > 0), false);
-		}
-	}
-
-	public void drawEnemies() {
-		boolean nextFrame = false;
-		if (enemyDeltaTime > .066) {
-			enemyDeltaTime = 0;
-			nextFrame = true;
-		}
-		if (enemies.size() > 0) {
-			for (Enemy enemy : enemies) {
-				if(enemySounds.containsKey(enemy.type)
-						&& elapsedTime - enemySoundDelay.get(enemy.type) > 3) {
-					enemySoundDelay.put(enemy.type, elapsedTime);
-					enemySounds.get(enemy.type).play();
-				}
-				Texture currentSprite = enemy.getCurrentSprite(nextFrame);
-				int h = currentSprite.getHeight() * enemy.getSize();
-				int w = currentSprite.getWidth() * enemy.getSize();
-				if (player.getX() > enemy.getX())
-					batch.draw(currentSprite, ((100 - w / 8) - (player.getX() - enemy.getX())),
-							((100 - h / 8) + (player.getY() - enemy.getY())),
-							(w / 4), (h / 4));
-				else
-					batch.draw(currentSprite, ((100 - w / 8) - (player.getX() - enemy.getX())),
-							((100 - h / 8) + (player.getY() - enemy.getY())),
-							(w / 4), (h / 4), 0, 0, (w/enemy.getSize()), (h/enemy.getSize()),
-							true, false);
-			}
-		}
-	}
-
-	public void drawUI() {
-		BitmapFont font = new BitmapFont();
-		font.getData().setScale((float) .5, (float) .5);
-		if (player.getState() != 3) {
-			int minutes = (int) (10 - (elapsedTime / 60));
-			int seconds = ((int) (60 - elapsedTime % 60));
-			font.draw(batch, (int) (minutes) + " :" + seconds, 0, 150);
-			font.setColor(Color.RED);
-			font.draw(batch, "HP:" + player.getHp(), 0, 56);
-			font.setColor(Color.GOLD);
-			font.draw(batch, "Level:" + player.getLvl(), 170, 56);
-			batch.draw(pauseButton, 180, 143, 20, 11);
-			if (setPaused) {
-				font.draw(batch, "Paused", 85, 120);
-				font.draw(batch, "Tap to Unpause", 74, 80);
-			}
-			if(lvlUp) {
-				batch.draw(confirmButton, 80, 46, 40, 20);
-				int i = 1;
-				for(Integer skill:skillList) {
-					batch.draw(skillTextures.get(skill), 80, 46 + (20 * i),
-							40, 20);
-					i++;
-				}
-				if(skillSelection != 0) {
-					batch.draw(selectionBox, 80, 46 + (20 * skillSelection),
-							40, 20);
-				}
-
-				font.draw(batch, "LEVEL UP!!!", 80, 136);
-			}
-		} else {
-			font.draw(batch, "Tap To Restart", 75, 120);
-			//font.draw(batch, "Tap and hold to return to menu", 50, 80);
-		}
-	}
-
-	@Override
-	public void dispose () {
-		batch.dispose();
-		background.dispose();
-	}
-
-	@Override
-	public boolean keyDown(int key) {
-		return false;
-	}
-	@Override
-	public boolean keyUp(int key) {
-		return false;
-	}
-
-	@Override
-	public boolean keyTyped(char character) {
-		return false;
-	}
-
-	@Override
-	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		if (pointer < 5) {
-			touches.get(pointer).touchX = screenX;
-			touches.get(pointer).touchY = screenY;
-			touches.get(pointer).touched = true;
-		}
-		return true;
-	}
-
-	@Override
-	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		if (inMenu) {
-			menuTheme.stop();
-			deathSpawn.play();
-			stage001.setVolume(.5F);
-			stage001.play();
-			inMenu = false;
-		} else {
-			if (!setPaused) {
-				if ((Gdx.graphics.getHeight() * .1) < screenY
-						|| (Gdx.graphics.getWidth() * .9 > screenX)) {
-					if (player.getState() != 3) {
-						if (player.getState() != 2 && touches.get(pointer).touchX > Gdx.graphics.getWidth()/2) {
-							player.setState(2);
-							playerAttackSound.play();
-							playerAttackDeltaTime = 0;
-						}
-						if (player.getState() == 1) {
-							player.setState(0);
-						}
-					} else {
-						restart();
-					}
-				} else {
-					player.setState(0);
-					deltaVx = 0;
-					deltaVy = 0;
-					setPaused = true;
-					stage001.pause();
-				}
-			} else {
-				setPaused = false;
-				stage001.play();
-			}
-			if (lvlUp) {
-				if (screenX > Gdx.graphics.getWidth() * .4
-						&& screenX < Gdx.graphics.getWidth() * .6
-						&& screenY > Gdx.graphics.getHeight() * .8
-						&& skillSelection != 0) {
-					lvlUp = false;
-					int skill = skillList.get(skillSelection - 1);
-					if (skill == 0) {
-						player.setHealing(player.getHealing() + 1);
-					} else if (skill == 1) {
-						player.setSpeed(player.getSpeed() + 1);
-					} else if (skill == 2) {
-						player.setSwordDamage(player.getSwordDamage() * 2);
-					} else if (skill == 3) {
-						if (player.getProjectiles().containsKey(0)) {
-							player.getProjectiles().get(0).lvlUp();
-						} else
-							player.getProjectiles().put(0, new Dagger());
-					} else if (skill == 4) {
-						if (player.getProjectiles().containsKey(1)) {
-							player.getProjectiles().get(1).lvlUp();
-						} else
-							player.getProjectiles().put(1, new SpinningKatana());
-					} else if (skill == 5) {
-						if (player.getProjectiles().containsKey(2)) {
-							player.getProjectiles().get(2).lvlUp();
-						} else
-							player.getProjectiles().put(2, new SpinningBlades());
-					} else if (skill == 6) {
-						if (player.getProjectiles().containsKey(3)) {
-							player.getProjectiles().get(3).lvlUp();
-						} else {
-							player.getProjectiles().put(3, new BoomerangAxe());
-						}
-					} else if (skill == 7) {
-						if (player.getProjectiles().containsKey(4)) {
-							player.getProjectiles().get(4).lvlUp();
-						} else {
-							player.getProjectiles().put(4, new FlowerOfLife());
-						}
-					}
-				}
-				if (screenX > Gdx.graphics.getWidth() * .4
-						&& screenX < Gdx.graphics.getWidth() * .6
-						&& screenY < Gdx.graphics.getHeight() * .8
-						&& screenY > Gdx.graphics.getHeight() * .6) {
-					skillSelection = 1;
-				} else if (screenX > Gdx.graphics.getWidth() * .4
-						&& screenX < Gdx.graphics.getWidth() * .6
-						&& screenY < Gdx.graphics.getHeight() * .6
-						&& screenY > Gdx.graphics.getHeight() * .4) {
-					skillSelection = 2;
-				} else if (screenX > Gdx.graphics.getWidth() * .4
-						&& screenX < Gdx.graphics.getWidth() * .6
-						&& screenY < Gdx.graphics.getHeight() * .4
-						&& screenY > Gdx.graphics.getHeight() * .2) {
-					skillSelection = 3;
-				} else {
-					skillSelection = 0;
-				}
-			}
-		}
-		if (pointer < 5) {
-			touches.get(pointer).touchX = 0;
-			touches.get(pointer).touchY = 0;
-			touches.get(pointer).touched = false;
-		}
-		return true;
-	}
-
+	// Generate projectiles
 	private void playerProjectiles() {
 		for(Skill skill : player.getProjectiles().values()) {
 			if (elapsedTime - skill.lastTick > skill.getCooldown()) {
@@ -755,35 +860,7 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
-	private void drawProjectiles() {
-		for (Projectile projectile:projectiles) {
-			TextureRegion projectileTexture = new TextureRegion(projectile.getTexture());
-			if (projectile.getID() == 2) {
-				batch.draw(projectileTexture,
-						((100 - projectile.getSize()) - (player.getX() - projectile.getXOnly())),
-						((100 - projectile.getSize()) + (player.getY() - projectile.getYOnly())),
-						projectile.getSize(),
-						projectile.getSize(),
-						projectile.getSize()*2, projectile.getSize()*2,
-						1,
-						1,
-						(float) Math.toDegrees(projectile.getCurrentRotation())
-				);
-			} else {
-				batch.draw(projectileTexture,
-						((100 - projectile.getSize()) - (player.getX() - projectile.getX())),
-						((100 - projectile.getSize()) + (player.getY() - projectile.getY())),
-						projectile.getSize(),
-						projectile.getSize(),
-						projectile.getSize()*2, projectile.getSize()*2,
-						1,
-						1,
-						(float) Math.toDegrees(projectile.getCurrentRotation())
-				);
-			}
-		}
-	}
-
+	// Detects projectile collision
 	private void projectileCollision() {
 		Iterator<Projectile> itr = projectiles.iterator();
 		while (itr.hasNext()) {
@@ -842,6 +919,9 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
+	//----- Player Functions-----
+
+	// Randomizes the levelup abilities
 	private void randomizeAbilities() {
 		Random random = new Random();
 		List<Integer> skills = new ArrayList<>();
@@ -856,6 +936,8 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
+
+	// Called whenever the user manually hits attack
 	private void playerManualAttack() {
 		if ((elapsedTime - lastHit < 5) && (elapsedTime > .5)) {
 			if (deltaVx > 0)
@@ -919,51 +1001,32 @@ public class DoomsdayClock extends ApplicationAdapter implements ApplicationList
 		}
 	}
 
-	@Override
-	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		if (player.getState() != 2 && !setPaused && (touches.get(pointer).touchX < Gdx.graphics.getWidth()/2)) {
-			if ((Gdx.graphics.getHeight() * .1) < touches.get(pointer).touchY
-					|| (Gdx.graphics.getWidth() * .9 > touches.get(pointer).touchX)) {
-				if ((Math.abs(touches.get(pointer).touchX - screenX) > 10
-						|| Math.abs(touches.get(pointer).touchY - screenY) > 10)
-						&& player.getState() != 3) {
-					double deltaY = screenY - touches.get(pointer).touchY;
-					double deltaX = screenX - touches.get(pointer).touchX;
-					playerAngle = (float) Math.atan2(deltaY, deltaX);
-					deltaVx = (float) (player.getSpeed() * Math.cos(playerAngle));
-					deltaVy = (float) (player.getSpeed() * Math.sin(playerAngle));
-					// Set player is moving
-					player.setState(1);
-				}
-			} else {
-				deltaVy = 0;
-				deltaVx = 0;
-				player.setState(0);
-			}
-		}
-		return true;
-	}
 
+	// Detect X-Movement Collision
 	private boolean detectMovementCollisionX(Player player, float deltaVx) {
-		return obstructionMap.containsKey(new LocationPair(((player.getX()+deltaVx) / 5),
-				(player.getY()/5)));
+		return obstructionMap.containsKey((new LocationPair(((player.getX()+deltaVx) / 5),
+				(player.getY()/5))).getKey());
 	}
 
+	// Detect Y-Movement Collision
 	private boolean detectMovementCollisionY(Player player, float deltaVy) {
-		return obstructionMap.containsKey(new LocationPair((player.getX() / 5),
-				((player.getY() + deltaVy)/5)));
+		return obstructionMap.containsKey((new LocationPair((player.getX() / 5),
+				((player.getY() + deltaVy)/5))).getKey());
+	}
+	// Detect X-Movement Collision
+	private boolean detectMovementCollisionX(Enemy enemy, float deltaVx) {
+		return obstructionMap.containsKey((new LocationPair(((enemy.getX()+deltaVx) / 5),
+				(enemy.getY()/5))).getKey());
 	}
 
-	@Override
-	public boolean mouseMoved(int screenX, int screenY) {
-		return false;
+	// Detect Y-Movement Collision
+	private boolean detectMovementCollisionY(Enemy enemy, float deltaVy) {
+		return obstructionMap.containsKey((new LocationPair((enemy.getX() / 5),
+				((enemy.getY() + deltaVy)/5))).getKey());
 	}
 
-	@Override
-	public boolean scrolled(float amountX, float amountY) {
-		return false;
-	}
 
+	// Reset gamestate
 	public void restart() {
 		environment.clear();
 		projectiles.clear();

@@ -28,8 +28,8 @@ public class Player {
 
 
     Player() {
-        speed = 100;
-        swordDamage = 5;
+        speed = 3;
+        swordDamage = 15;
         lvl = 1;
         xp = 0;
         cooldownReduction = 0;
